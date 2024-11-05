@@ -1,3 +1,4 @@
+
 const pup = require("puppeteer");
 let { id, pass } = require("./secret");
 let tab;
@@ -49,6 +50,25 @@ async function main() {
             }
         }
 
+
+        // try {
+        //     await tab.waitForSelector('#edit-education', { timeout: 6000 });
+        //     await tab.click('#edit-education');
+
+        //     await tab.waitForSelector('#college-modal', { visible: true });
+
+        //     await clearAndType("#college", data.College);
+        //     await clearAndType("#degree", data.Degree);
+        //     await clearAndType("#stream", data.Stream);
+
+        //     await tab.click("#college-submit");
+        //     console.log("Education details submitted.");
+        //     await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // } catch (error) {
+        //     console.error("Error updating education details:", error);
+        // }
+
         try {
             await tab.waitForSelector('#edit-education', { timeout: 6000 });
             await tab.click('#edit-education');
@@ -79,6 +99,24 @@ async function main() {
 
         } catch (error) {
             console.error("Error updating other experiences:", error);
+        }
+
+        try {
+            await tab.waitForSelector('#edit-project', { timeout: 6000 });
+            await tab.click('#edit-project');
+
+            await tab.waitForSelector('#project-modal', { visible: true });
+
+            await clearAndType("#other_experiences_title", data.ProjectName);
+            await clearAndType("#other_experiences_project_description", data.ProjectName_Description);
+            // await clearAndType("#stream", data.Stream);
+
+            await tab.click("#project-submit");
+            console.log("Education details submitted.");
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+        } catch (error) {
+            console.error("Error updating education details:", error);
         }
 
         await application(data);
