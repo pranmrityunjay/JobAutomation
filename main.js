@@ -91,23 +91,22 @@ async function main() {
 async function application(data) {
     try {
         await tab.goto("https://internshala.com/internships/");
-        
         await tab.waitForSelector("#internship_list_container", { visible: true });
-
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Extra delay for safety
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         let internshipElements = await tab.$$(".individual_internship");
-        
-        console.log(`Found ${internshipElements.length} internship elements.`); 
+
+        console.log(`Found ${internshipElements.length} internship elements.`);
 
         let detailUrl = [];
 
-        for (let i = 0; i < Math.min(5, internshipElements.length); i++) { 
+        // Collect URLs of internships (limit to 2 for testing, or more as needed)
+        for (let i = 0; i < Math.min(6, internshipElements.length); i++) {
             let url = await tab.evaluate(ele => {
                 let anchor = ele.querySelector(".job-title-href");
                 return anchor ? anchor.getAttribute("href") : null;
             }, internshipElements[i]);
-            
+
             if (url) {
                 detailUrl.push(url);
                 console.log(`Found URL: ${url}`);
@@ -116,10 +115,13 @@ async function application(data) {
             }
         }
 
+        // Apply to each internship
         for (let url of detailUrl) {
             if (url) {
                 await applyInternship(url, data);
-                await new Promise(resolve => setTimeout(resolve, 1000)); 
+                await tab.goto("https://internshala.com/internships/");
+                await tab.waitForSelector("#internship_list_container", { visible: true });
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for internships list to load
             } else {
                 console.log("Skipping null URL.");
             }
@@ -133,33 +135,52 @@ async function application(data) {
 }
 
 async function applyInternship(url, data) {
+    console.log("Applying to internship at URL:", url);
     try {
         await tab.goto("https://internshala.com/" + url);
+
         await tab.waitForSelector(".btn.btn-large", { visible: true });
         await tab.click(".btn.btn-large");
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-        await tab.waitForSelector('.proceed-btn-container .btn.btn-large.proceed-btn', { visible: true, timeout: 10000 });
-        await tab.click('.proceed-btn-container .btn.btn-large.proceed-btn');
-        console.log("Clicked on 'Proceed to application' button.");
+        const coverLetterSelector = '#cover_letter';
+        const coverLetterField = await tab.$(coverLetterSelector);
 
-        await tab.waitForSelector('#cover_letter', { visible: true });
-        await tab.type('#cover_letter', data.hiringReason);
-        console.log("Filled in the cover letter with your skills.");
+        if (coverLetterField) {
+            await tab.evaluate(() => {
+                const textarea = document.getElementById('cover_letter');
+                textarea.style.display = 'block';
+                textarea.style.overflow = 'visible';
+            });
 
-        const answerSelectors = await tab.$$(".additional_information_container textarea");
-        const answers = [data.hiringReason, data.availability, data.rating];
-
-        for (let i = 0; i < answers.length && i < answerSelectors.length; i++) {
-            await answerSelectors[i].type(answers[i]);
-            await new Promise(resolve => setTimeout(resolve, 1000)); 
+            await tab.evaluate((text) => {
+                document.getElementById('cover_letter').value = text;
+            }, "Hello, I'm interested in this opportunity.");
+            console.log("Filled in the cover letter.");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+            console.log("Cover letter field not found, skipping...");
         }
 
-        await tab.click(".submit_button_container button");
+        const locationCheckboxSelector = '#check';
+        const locationCheckbox = await tab.$(locationCheckboxSelector);
+
+        if (locationCheckbox) {
+            await tab.click(locationCheckboxSelector);
+            console.log("Marked location choose as 'yes'.");
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+            console.log("Location choose checkbox not found, skipping...");
+        }
+
+        await tab.click(".submit_button_container #submit");
         console.log(`Applied to internship: ${url}`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
     } catch (error) {
         console.error("Error applying to internship:", error);
     }
 }
 
-main();
+
+main(); 
