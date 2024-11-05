@@ -1,9 +1,9 @@
 const readline = require("readline");
-
 const pup = require("puppeteer");
 let { id, pass } = require("./secret");
 let tab;
 let dataFile = require("./data");
+
 
 async function main() {
     try {
@@ -48,7 +48,7 @@ async function main() {
                 console.error(`Error clearing and typing in ${selector}:`, error);
             }
         }
-
+        
         try {
             await tab.waitForSelector('#edit-accomplishments', { timeout: 6000 });
             await tab.click('#edit-accomplishments');
@@ -74,6 +74,7 @@ async function main() {
             await clearAndType("#college", data.College);
             await clearAndType("#degree", data.Degree);
             await clearAndType("#stream", data.Stream);
+            await clearAndType("#performance-college", data.Percentage);
 
             await tab.click("#college-submit");
             console.log("Education details submitted.");
@@ -114,7 +115,6 @@ async function main() {
         } catch (error) {
             console.error("Error updating education details:", error);
         }
-
 
     await application(data);
 
@@ -158,14 +158,12 @@ async function application(data) {
                 console.log("Skipping null URL.");
             }
         }
-        
+
         console.log("Applied to internships successfully!");
     } catch (error) {
         console.error("Error in application function:", error);
     }
 }
-
-
 
 async function applyInternship(url, data) {
     console.log("Navigating to internship at URL:", url);
@@ -233,7 +231,5 @@ async function applyInternship(url, data) {
         console.error("Error applying to internship:", error);
     }
 }
-
-
 
 main(); 
